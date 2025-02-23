@@ -1,0 +1,67 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
+class Card {
+    private String suit;
+    private String rank;
+
+    public Card(String suit, String rank) {
+        this.suit = suit;
+        this.rank = rank;
+    }
+
+    public String getSuit() {
+        return suit;
+    }
+
+    @Override
+    public String toString() {
+        return rank + " of " + suit;
+    }
+}
+
+public class CardCollection {
+    private Map<String, List<Card>> cardMap;
+
+    public CardCollection() {
+        cardMap = new HashMap<>();
+        initializeCards();
+    }
+
+    private void initializeCards() {
+        String[] suits = {"Hearts", "Diamonds", "Clubs", "Spades"};
+        String[] ranks = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace"};
+
+        for (String suit : suits) {
+            List<Card> cards = new ArrayList<>();
+            for (String rank : ranks) {
+                cards.add(new Card(suit, rank));
+            }
+            cardMap.put(suit, cards);
+        }
+    }
+
+    public List<Card> findCardsBySuit(String suit) {
+        return cardMap.getOrDefault(suit, new ArrayList<>());
+    }
+
+    public static void main(String[] args) {
+        CardCollection cardCollection = new CardCollection();
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Enter a suit to find cards (Hearts, Diamonds, Clubs, Spades): ");
+        String suit = scanner.nextLine();
+
+        List<Card> cards = cardCollection.findCardsBySuit(suit);
+        if (cards.isEmpty()) {
+            System.out.println("No cards found for the suit: " + suit);
+        } else {
+            System.out.println("Cards of " + suit + ": " + cards);
+        }
+
+        scanner.close();
+    }
+}
