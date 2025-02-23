@@ -1,0 +1,204 @@
+package exp4;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Scanner;
+class Employee {
+ int id;
+ String name;
+ double salary;
+ public Employee(int id, String name, double salary) {
+ this.id = id;
+ this.name = name;
+ this.salary = salary;
+ }
+ public int getId() { return id; }
+ public String getName() { return name; }
+ public double getSalary() { return salary; }
+ public void setName(String name) { this.name = name; }
+ public void setSalary(double salary) { this.salary = salary; }
+}
+class EmployeeDatabase {
+ private static final String URL = "jdbc:mysql://localhost:3306/employee_db";
+private static final String USER = "root";
+ private static final String PASSWORD = "Mridul@01";
+ private static Connection connect() throws SQLException {
+ return DriverManager.getConnection(URL, USER, PASSWORD);
+ }
+ public static void addEmployee(Employee emp) {
+ try (Connection conn = connect()) {
+ String query = "INSERT INTO employees (id, name, salary) VALUES (?, ?, ?)";
+ try (PreparedStatement stmt = conn.prepareStatement(query)) {
+ stmt.setInt(1, emp.getId());
+ stmt.setString(2, emp.getName());
+ stmt.setDouble(3, emp.getSalary());
+ stmt.executeUpdate();
+ System.out.println("Employee added successfully.");
+ }
+ } catch (SQLException e) {
+ e.printStackTrace();
+ }
+ }
+ public static void updateEmployee(Employee emp) {
+ try (Connection conn = connect()) {
+ String query = "UPDATE employees SET name = ?, salary = ? WHERE id = ?";
+ try (PreparedStatement stmt = conn.prepareStatement(query)) {
+ stmt.setString(1, emp.getName());
+ stmt.setDouble(2, emp.getSalary());
+ stmt.setInt(3, emp.getId());
+ int rowsUpdated = stmt.executeUpdate();
+ if (rowsUpdated > 0) {
+ System.out.println("Employee updated successfully.");
+} else {
+ System.out.println("Employee with ID " + emp.getId() + " not found.");
+ }
+ }
+ } catch (SQLException e) {
+ e.printStackTrace();
+ }
+ }
+ public static void removeEmployee(int id) {
+ try (Connection conn = connect()) {
+ String query = "DELETE FROM employees WHERE id = ?";
+ try (PreparedStatement stmt = conn.prepareStatement(query)) {
+ stmt.setInt(1, id);
+ int rowsDeleted = stmt.executeUpdate();
+ if (rowsDeleted > 0) {
+ System.out.println("Employee removed successfully.");
+ } else {
+ System.out.println("Employee with ID " + id + " not found.");
+ }
+ }
+ } catch (SQLException e) {
+ e.printStackTrace();
+ }
+ }
+ public static Employee searchEmployee(int id) {
+ try (Connection conn = connect()) {
+ String query = "SELECT * FROM employees WHERE id = ?";
+ try (PreparedStatement stmt = conn.prepareStatement(query)) {
+ stmt.setInt(1, id);
+ try (ResultSet rs = stmt.executeQuery()) {
+f (rs.next()) {
+ int empId = rs.getInt("id");
+ String name = rs.getString("name");
+ double salary = rs.getDouble("salary");
+ return new Employee(empId, name, salary);
+ }
+ }
+ }
+ } catch (SQLException e) {
+ e.printStackTrace();
+ }
+ return null;
+ }
+ public static ArrayList<Employee> getAllEmployees() {
+ ArrayList<Employee> employees = new ArrayList<>();
+ try (Connection conn = connect()) {
+ String query = "SELECT * FROM employees";
+ try (Statement stmt = conn.createStatement();
+ ResultSet rs = stmt.executeQuery(query)) {
+ while (rs.next()) {
+ int id = rs.getInt("id");
+ String name = rs.getString("name");
+ double salary = rs.getDouble("salary");
+ employees.add(new Employee(id, name, salary));
+ }
+ }
+ } catch (SQLException e) {
+ e.printStackTrace();
+ }
+ return employees;
+ }
+}
+public class EmployeeManagementSystem {
+ public static void main(String[] args) {
+ Scanner scanner = new Scanner(System.in);
+ ArrayList<Employee> employeeList = new ArrayList<>();
+ while (true) {
+ System.out.println("\nEmployee Management System");
+ System.out.println("1. Add Employee");
+ System.out.println("2. Update Employee");
+ System.out.println("3. Remove Employee");
+ System.out.println("4. Search Employee");
+ System.out.println("5. View All Employees");
+ System.out.println("6. Exit");
+ int choice = scanner.nextInt();
+ scanner.nextLine();
+ switch (choice) {
+ case 1: {
+ System.out.print("Enter Employee ID: ");
+ int id = scanner.nextInt();
+ scanner.nextLine();
+ System.out.print("Enter Employee Name: ");
+ String name = scanner.nextLine();
+ System.out.print("Enter Employee Salary: ");
+ double salary = scanner.nextDouble();
+ Employee newEmp = new Employee(id, name, salary);
+ EmployeeDatabase.addEmployee(newEmp);
+ break;
+ }
+case 2: {
+ System.out.print("Enter Employee ID to update: ");
+ int id = scanner.nextInt();
+ scanner.nextLine();
+ Employee emp = EmployeeDatabase.searchEmployee(id);
+ if (emp != null) {
+ System.out.print("Enter New Name: ");
+ String name = scanner.nextLine();
+ System.out.print("Enter New Salary: ");
+ double salary = scanner.nextDouble();
+ emp.setName(name);
+ emp.setSalary(salary);
+ EmployeeDatabase.updateEmployee(emp);
+ } else {
+ System.out.println("Employee not found.");
+ }
+ break;
+ }
+ case 3: {
+ System.out.print("Enter Employee ID to remove: ");
+ int id = scanner.nextInt();
+ EmployeeDatabase.removeEmployee(id);
+ break;
+ }
+ case 4: {
+ System.out.print("Enter Employee ID to search: ");
+ int id = scanner.nextInt();
+ Employee emp = EmployeeDatabase.searchEmployee(id);
+ if (emp != null) {
+System.out.println("Employee found: ID = " + emp.getId() + ", Name = " +
+emp.getName() + ", Salary = " + emp.getSalary());
+ } else {
+ System.out.println("Employee not found.");
+ }
+ break;
+ }
+ case 5: {
+ ArrayList<Employee> employees = EmployeeDatabase.getAllEmployees();
+ if (employees.isEmpty()) {
+ System.out.println("No employees found.");
+ } else {
+ System.out.println("\nEmployee List:");
+ for (Employee emp : employees) {
+ System.out.println("ID: " + emp.getId() + ", Name: " + emp.getName() + ", Salary: " +
+emp.getSalary());
+ }
+ }
+ break;
+ }
+ case 6: {
+ System.out.println("Exiting...");
+ scanner.close();
+ return;
+ }
+ default:
+ System.out.println("Invalid option. Try again.");
+ }
+ }
+ }
+}
